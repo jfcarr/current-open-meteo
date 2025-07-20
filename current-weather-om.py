@@ -121,6 +121,19 @@ def get_cloud_cover_description(response_text):
 
     return f"{data_object['current']['cloud_cover']}% cloud cover"
 
+def get_cardinal_direction(azimuth):
+    if azimuth < 0 or azimuth >= 360:
+        raise ValueError("Azimuth must be in the range [0, 360) degrees.")
+    
+    directions = [
+        "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
+        "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW", "N"
+    ]
+    
+    index = round(azimuth / 22.5) % 16
+ 
+    return directions[index]
+
 def get_wind_description(response_text):
     '''
     Get the wind and wind gust speed.
@@ -133,7 +146,9 @@ def get_wind_description(response_text):
     wind_gust = round(data_object['current']['wind_gusts_10m'], 0)
     wind_gust = f"{wind_gust:.2f}".rstrip('0').rstrip('.')
 
-    wind_description = f"Wind: {wind} mph, gusting to {wind_gust} mph"
+    wind_direction = get_cardinal_direction(data_object['current']['wind_direction_10m'])
+
+    wind_description = f"Wind: {wind} mph ({wind_direction}), gusting to {wind_gust} mph"
 
     return wind_description
 
