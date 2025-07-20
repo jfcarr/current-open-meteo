@@ -18,6 +18,9 @@ import requests
 degree_sign = u'\N{DEGREE SIGN}'
 
 def find_location(latitude, longitude):
+    '''
+    Use the GeoPy geolocator to get location information based on latitude and longitude.
+    '''
     geolocator = Nominatim(user_agent="openMeteoCli")
     location = geolocator.reverse(f"{latitude}, {longitude}")
 
@@ -27,6 +30,9 @@ def find_location(latitude, longitude):
         return "Unknown Location"
 
 def get_current_time(response_text):
+    '''
+    Get the current time from the API response and format it as 12 hour am/pm.
+    '''
     data_object = json.loads(response_text)
     datetime_string = data_object['current']['time']
     dt = datetime.fromisoformat(datetime_string)
@@ -36,6 +42,10 @@ def get_current_time(response_text):
     return time_12_hour_format
 
 def get_temperature_description(response_text):
+    '''
+    Get actual and apparent temperature from the API response, round them to nearest value, and
+    return a formatted string.
+    '''
     data_object = json.loads(response_text)
     
     temperature = round(data_object['current']['temperature_2m'], 0)
@@ -47,6 +57,10 @@ def get_temperature_description(response_text):
     return f"{formatted_temperature}{degree_sign} (feels like {formatted_apparent_temperature}{degree_sign})"
 
 def get_wso_description(response_text):
+    '''
+    Get the WMO weather code from the API response and use it to look up a friendly description
+    of weather conditions.
+    '''
     # https://gist.github.com/stellasphere/9490c195ed2b53c707087c8c2db4ec0c
     wmo_weather_codes = {
         "0": "Sunny|Clear",
@@ -96,11 +110,17 @@ def get_wso_description(response_text):
     return description
 
 def get_cloud_cover_description(response_text):
+    '''
+    Get the cloud cover description from the API response.
+    '''
     data_object = json.loads(response_text)
 
     return f"{data_object['current']['cloud_cover']}% cloud cover"
 
 def get_wind_description(response_text):
+    '''
+    Get the wind and wind gust speed.
+    '''
     data_object = json.loads(response_text)
 
     wind = round(data_object['current']['wind_speed_10m'], 0)
@@ -114,6 +134,9 @@ def get_wind_description(response_text):
     return wind_description
 
 def get_formatted_low_temperature(response_text):
+    '''
+    Get the daily low temperature.
+    '''
     data_object = json.loads(response_text)
 
     temperature = round(data_object['daily']['temperature_2m_min'][0], 0)
@@ -122,6 +145,9 @@ def get_formatted_low_temperature(response_text):
     return f"min: {formatted_temperature}{degree_sign}"
 
 def get_formatted_high_temperature(response_text):
+    '''
+    Get the daily high temperature.
+    '''
     data_object = json.loads(response_text)
 
     temperature = round(data_object['daily']['temperature_2m_max'][0], 0)
@@ -130,6 +156,9 @@ def get_formatted_high_temperature(response_text):
     return f"max: {formatted_temperature}{degree_sign}"
 
 def get_sunrise(response_text):
+    '''
+    Get the time of today's sunrise.
+    '''
     data_object = json.loads(response_text)
 
     datetime_string = data_object['daily']['sunrise'][0]
@@ -140,6 +169,9 @@ def get_sunrise(response_text):
     return time_12_hour_format
 
 def get_sunset(response_text):
+    '''
+    Get the time of today's sunset.
+    '''
     data_object = json.loads(response_text)
 
     datetime_string = data_object['daily']['sunset'][0]
@@ -159,33 +191,35 @@ def main():
 
     location_name = find_location(args.latitude, args.longitude)
 
-    current_codes = [
-        "is_day",
-        "temperature_2m",
-        "apparent_temperature",
-        "relative_humidity_2m",
-        "cloud_cover",
-        "wind_speed_10m",
-        "wind_gusts_10m",
-        "wind_direction_10m",
-        "precipitation",
-        "snowfall",
-        "precipitation_probability",
-        "rain",
-        "showers",
-        "weather_code",
-        "snow_depth",
-        "visibility"
-    ]
-    current_parameter = ",".join(current_codes)
+    current_parameter = ",".join(
+        [
+            "is_day",
+            "temperature_2m",
+            "apparent_temperature",
+            "relative_humidity_2m",
+            "cloud_cover",
+            "wind_speed_10m",
+            "wind_gusts_10m",
+            "wind_direction_10m",
+            "precipitation",
+            "snowfall",
+            "precipitation_probability",
+            "rain",
+            "showers",
+            "weather_code",
+            "snow_depth",
+            "visibility"
+        ]
+    )
 
-    daily_codes = [
-        "temperature_2m_max",
-        "temperature_2m_min",
-        "sunrise",
-        "sunset"
-    ]
-    daily_parameter = ",".join(daily_codes)
+    daily_parameter = ",".join(
+        [
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "sunrise",
+            "sunset"
+        ]
+    )
 
     response = requests.get(
         "https://api.open-meteo.com/v1/forecast?" + 
@@ -198,8 +232,6 @@ def main():
     )
 
     if response.status_code == 200:
-        data = response.json()
-
         print(f"{location_name} @ {get_current_time(response.text)}")
         print(f"  {get_temperature_description(response.text)}")
         print(f"  {get_wso_description(response.text)}, {get_cloud_cover_description(response.text)}")
