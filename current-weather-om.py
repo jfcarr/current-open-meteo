@@ -16,6 +16,7 @@ import json
 import requests
 
 degree_sign = u'\N{DEGREE SIGN}'
+is_debug = False  # Must be False for production!
 
 def find_location(latitude, longitude):
     '''
@@ -25,6 +26,9 @@ def find_location(latitude, longitude):
     location = geolocator.reverse(f"{latitude}, {longitude}")
 
     if location:
+        if is_debug:
+            print(location.raw)
+        
         return location.address
     else:
         return "Unknown Location"
@@ -232,6 +236,9 @@ def main():
     )
 
     if response.status_code == 200:
+        if is_debug:
+            print (json.dumps(response.json(), indent=4))
+
         print(f"{location_name} @ {get_current_time(response.text)}")
         print(f"  {get_temperature_description(response.text)}")
         print(f"  {get_wso_description(response.text)}, {get_cloud_cover_description(response.text)}")
