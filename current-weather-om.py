@@ -220,8 +220,6 @@ def main():
     parser.add_argument('--timezone', type=str, help='Your time zone, in tz identifier format, e.g. "America/New_York"', required=True)
     args = parser.parse_args()
 
-    location_name = find_location(args.latitude, args.longitude)
-
     current_parameter = ",".join(
         [
             "is_day",
@@ -253,34 +251,39 @@ def main():
         ]
     )
 
-    response = requests.get(
-        "https://api.open-meteo.com/v1/forecast?" + 
-        f"latitude={args.latitude}&longitude={args.longitude}&" + 
-        "temperature_unit=fahrenheit&" +
-        "wind_speed_unit=mph&" +
-        f"timezone={args.timezone}&" +
-        f"current={current_parameter}&" +
-        f"daily={daily_parameter}"
-    )
+    try:
+        location_name = find_location(args.latitude, args.longitude)
+        
+        response = requests.get(
+            "https://api.open-meteo.com/v1/forecast?" + 
+            f"latitude={args.latitude}&longitude={args.longitude}&" + 
+            "temperature_unit=fahrenheit&" +
+            "wind_speed_unit=mph&" +
+            f"timezone={args.timezone}&" +
+            f"current={current_parameter}&" +
+            f"daily={daily_parameter}"
+        )
 
-    if response.status_code == 200:
-        if is_debug:
-            print (json.dumps(response.json(), indent=4))
+        if response.status_code == 200:
+            if is_debug:
+                print (json.dumps(response.json(), indent=4))
 
-        om_mgr = OpenMeteoManager(response.text)
+            om_mgr = OpenMeteoManager(response.text)
 
-        print(f"{location_name} @ {om_mgr.get_current_time()}")
-        print(f"  {om_mgr.get_temperature_description()}")
-        print(f"  {om_mgr.get_wso_description()}, {om_mgr.get_cloud_cover_description()}")
-        print(f"  {om_mgr.get_humidity_and_dewpoint()}")
-        print(f"  {om_mgr.get_wind_description()}")
-        print(f"  {om_mgr.get_precipitation_probability()}")
-        print("  ----")
-        print(f"  {om_mgr.get_formatted_low_temperature()} / {om_mgr.get_formatted_high_temperature()}")
-        print(f"  sunrise: {om_mgr.get_sunrise()} / sunset: {om_mgr.get_sunset()}")
-    else:
-        print("Failed to retrieve weather data.")
-        print(f"Status code: {response.status_code}")
+            print(f"{location_name} @ {om_mgr.get_current_time()}")
+            print(f"  {om_mgr.get_temperature_description()}")
+            print(f"  {om_mgr.get_wso_description()}, {om_mgr.get_cloud_cover_description()}")
+            print(f"  {om_mgr.get_humidity_and_dewpoint()}")
+            print(f"  {om_mgr.get_wind_description()}")
+            print(f"  {om_mgr.get_precipitation_probability()}")
+            print("  ----")
+            print(f"  {om_mgr.get_formatted_low_temperature()} / {om_mgr.get_formatted_high_temperature()}")
+            print(f"  sunrise: {om_mgr.get_sunrise()} / sunset: {om_mgr.get_sunset()}")
+        else:
+            print("Failed to retrieve weather data.")
+            print(f"Status code: {response.status_code}")
+    except Exception as ex:
+        print(f"An error occurred: {ex}")
 
 if __name__ == "__main__":
     main()
