@@ -60,6 +60,17 @@ def get_temperature_description(response_text):
 
     return f"{formatted_temperature}{degree_sign} (feels like {formatted_apparent_temperature}{degree_sign})"
 
+def get_humidity_and_dewpoint(response_text):
+    '''
+    Get apparent humidity percentage and dew point temperature from API response.
+    '''
+    data_object = json.loads(response_text)
+    humidity = data_object['current']['relative_humidity_2m']
+    dewpoint = round(data_object['current']['dew_point_2m'], 0)
+    formatted_dewpoint = f"{dewpoint:.2f}".rstrip('0').rstrip('.')
+
+    return f"Relative humidity is {humidity}%, dew point is {formatted_dewpoint}{degree_sign}"
+
 def get_wso_description(response_text):
     '''
     Get the WMO weather code from the API response and use it to look up a friendly description
@@ -216,6 +227,7 @@ def main():
             "temperature_2m",
             "apparent_temperature",
             "relative_humidity_2m",
+            "dew_point_2m",
             "cloud_cover",
             "wind_speed_10m",
             "wind_gusts_10m",
@@ -256,6 +268,7 @@ def main():
 
         print(f"{location_name} @ {get_current_time(response.text)}")
         print(f"  {get_temperature_description(response.text)}")
+        print(f"  {get_humidity_and_dewpoint(response.text)}")
         print(f"  {get_wso_description(response.text)}, {get_cloud_cover_description(response.text)}")
         print(f"  {get_wind_description(response.text)}")
         print("  ----")
