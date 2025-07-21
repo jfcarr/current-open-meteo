@@ -163,6 +163,16 @@ def get_wind_description(response_text):
 
     return wind_description
 
+def get_precipitation_probability(response_text):
+    '''
+    Get precipitation likelihood and return formatted description
+    '''
+    data_object = json.loads(response_text)
+
+    precipitation_probability = data_object['current']['precipitation_probability']
+
+    return f"Precipitation probability is {precipitation_probability}%"
+
 def get_formatted_low_temperature(response_text):
     '''
     Get the daily low temperature.
@@ -271,6 +281,7 @@ def main():
         print(f"  {get_humidity_and_dewpoint(response.text)}")
         print(f"  {get_wso_description(response.text)}, {get_cloud_cover_description(response.text)}")
         print(f"  {get_wind_description(response.text)}")
+        print(f"  {get_precipitation_probability(response.text)}")
         print("  ----")
         print(f"  {get_formatted_low_temperature(response.text)} / {get_formatted_high_temperature(response.text)}")
         print(f"  sunrise: {get_sunrise(response.text)} / sunset: {get_sunset(response.text)}")
