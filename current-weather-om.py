@@ -18,64 +18,135 @@ import requests
 degree_sign = u'\N{DEGREE SIGN}'
 is_debug = False  # Must be False for production!
 
-def find_location(latitude, longitude):
-    '''
-    Use the GeoPy geolocator to get location information based on latitude and longitude.
-    '''
-    geolocator = Nominatim(user_agent="openMeteoCli")
-    location = geolocator.reverse(f"{latitude}, {longitude}")
+class OpenMeteoManager:
+    def __init__(self, response_text):
+        self.response_text = response_text
+        self.data_object = json.loads(self.response_text)
 
-    if location:
-        if is_debug:
-            print(location.raw)
+    def get_current_time(self):
+        '''
+        Get the current time from the API response and format it as 12 hour am/pm.
+        '''
+        datetime_string = self.data_object['current']['time']
+        dt = datetime.fromisoformat(datetime_string)
+
+        time_12_hour_format = dt.strftime("%I:%M %p")
+
+        return time_12_hour_format
+
+    def get_temperature_description(self):
+        '''
+        Get actual and apparent temperature from the API response, round them to nearest value, and
+        return a formatted string.
+        '''
+        temperature = round(self.data_object['current']['temperature_2m'], 0)
+        formatted_temperature = f"{temperature:.2f}".rstrip('0').rstrip('.')
+            
+        apparent_temperature = round(self.data_object['current']['apparent_temperature'], 0)
+        formatted_apparent_temperature = f"{apparent_temperature:.2f}".rstrip('0').rstrip('.')
+
+        return f"{formatted_temperature}{degree_sign} (feels like {formatted_apparent_temperature}{degree_sign})"
+
+    def get_humidity_and_dewpoint(self):
+        '''
+        Get apparent humidity percentage and dew point temperature from API response.
+        '''
+        humidity = self.data_object['current']['relative_humidity_2m']
+        dewpoint = round(self.data_object['current']['dew_point_2m'], 0)
+        formatted_dewpoint = f"{dewpoint:.2f}".rstrip('0').rstrip('.')
+
+        return f"Relative humidity is {humidity}%, dew point is {formatted_dewpoint}{degree_sign}"
+
+    def get_wso_description(self):
+        '''
+        Get the WMO weather code from the API response and use it to look up a friendly description
+        of weather conditions.
+        '''
+        is_day = self.data_object['current']['is_day']
+
+        weather_code = self.data_object['current']['weather_code']
+        description = OpenMeteoData.wmo_weather_codes.get(str(weather_code))
+
+        if description:
+            if "|" in description:
+                description = description.split("|")
+                description = description[0] if is_day == 1 else description[1]
+        else:
+            description = "Unknown"
         
-        return location.address
-    else:
-        return "Unknown Location"
+        return description
 
-def get_current_time(response_text):
-    '''
-    Get the current time from the API response and format it as 12 hour am/pm.
-    '''
-    data_object = json.loads(response_text)
-    datetime_string = data_object['current']['time']
-    dt = datetime.fromisoformat(datetime_string)
+    def get_cloud_cover_description(self):
+        '''
+        Get the cloud cover description from the API response.
+        '''
+        return f"{self.data_object['current']['cloud_cover']}% cloud cover"
 
-    time_12_hour_format = dt.strftime("%I:%M %p")
+    def get_wind_description(self):
+        '''
+        Get the wind and wind gust speed.
+        '''
+        wind = round(self.data_object['current']['wind_speed_10m'], 0)
+        wind = f"{wind:.2f}".rstrip('0').rstrip('.')
 
-    return time_12_hour_format
+        wind_gust = round(self.data_object['current']['wind_gusts_10m'], 0)
+        wind_gust = f"{wind_gust:.2f}".rstrip('0').rstrip('.')
 
-def get_temperature_description(response_text):
-    '''
-    Get actual and apparent temperature from the API response, round them to nearest value, and
-    return a formatted string.
-    '''
-    data_object = json.loads(response_text)
-    
-    temperature = round(data_object['current']['temperature_2m'], 0)
-    formatted_temperature = f"{temperature:.2f}".rstrip('0').rstrip('.')
-        
-    apparent_temperature = round(data_object['current']['apparent_temperature'], 0)
-    formatted_apparent_temperature = f"{apparent_temperature:.2f}".rstrip('0').rstrip('.')
+        wind_direction = OpenMeteoHelpers.get_cardinal_direction(self.data_object['current']['wind_direction_10m'])
 
-    return f"{formatted_temperature}{degree_sign} (feels like {formatted_apparent_temperature}{degree_sign})"
+        wind_description = f"Wind: {wind} mph ({wind_direction}), gusting to {wind_gust} mph"
 
-def get_humidity_and_dewpoint(response_text):
-    '''
-    Get apparent humidity percentage and dew point temperature from API response.
-    '''
-    data_object = json.loads(response_text)
-    humidity = data_object['current']['relative_humidity_2m']
-    dewpoint = round(data_object['current']['dew_point_2m'], 0)
-    formatted_dewpoint = f"{dewpoint:.2f}".rstrip('0').rstrip('.')
+        return wind_description
 
-    return f"Relative humidity is {humidity}%, dew point is {formatted_dewpoint}{degree_sign}"
+    def get_precipitation_probability(self):
+        '''
+        Get precipitation likelihood and return formatted description
+        '''
+        precipitation_probability = self.data_object['current']['precipitation_probability']
 
-def get_wso_description(response_text):
-    '''
-    Get the WMO weather code from the API response and use it to look up a friendly description
-    of weather conditions.
-    '''
+        return f"Precipitation probability is {precipitation_probability}%"
+
+    def get_formatted_low_temperature(self):
+        '''
+        Get the daily low temperature.
+        '''
+        temperature = round(self.data_object['daily']['temperature_2m_min'][0], 0)
+        formatted_temperature = f"{temperature:.2f}".rstrip('0').rstrip('.')
+
+        return f"min: {formatted_temperature}{degree_sign}"
+
+    def get_formatted_high_temperature(self):
+        '''
+        Get the daily high temperature.
+        '''
+        temperature = round(self.data_object['daily']['temperature_2m_max'][0], 0)
+        formatted_temperature = f"{temperature:.2f}".rstrip('0').rstrip('.')
+
+        return f"max: {formatted_temperature}{degree_sign}"
+
+    def get_sunrise(self):
+        '''
+        Get the time of today's sunrise.
+        '''
+        datetime_string = self.data_object['daily']['sunrise'][0]
+        dt = datetime.fromisoformat(datetime_string)
+
+        time_12_hour_format = dt.strftime("%I:%M %p")
+
+        return time_12_hour_format
+
+    def get_sunset(self):
+        '''
+        Get the time of today's sunset.
+        '''
+        datetime_string = self.data_object['daily']['sunset'][0]
+        dt = datetime.fromisoformat(datetime_string)
+
+        time_12_hour_format = dt.strftime("%I:%M %p")
+
+        return time_12_hour_format
+
+class OpenMeteoData:
     # https://gist.github.com/stellasphere/9490c195ed2b53c707087c8c2db4ec0c
     wmo_weather_codes = {
         "0": "Sunny|Clear",
@@ -108,118 +179,38 @@ def get_wso_description(response_text):
         "99": "Thunderstorm with Hail"
     }
 
-    data_object = json.loads(response_text)
+class OpenMeteoHelpers:
+    @staticmethod
+    def get_cardinal_direction(azimuth):
+        '''
+        Give an azimuth value in degrees, return a cardinal direction, e.g., "NE".
+        '''
+        if azimuth < 0 or azimuth >= 360:
+            raise ValueError("Azimuth must be in the range [0, 360) degrees.")
+        
+        directions = [
+            "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
+            "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW", "N"
+        ]
+        
+        index = round(azimuth / 22.5) % 16
+    
+        return directions[index]
 
-    is_day = data_object['current']['is_day']
+def find_location(latitude, longitude):
+    '''
+    Use the GeoPy geolocator to get location information based on latitude and longitude.
+    '''
+    geolocator = Nominatim(user_agent="openMeteoCli")
+    location = geolocator.reverse(f"{latitude}, {longitude}")
 
-    weather_code = data_object['current']['weather_code']
-    description = wmo_weather_codes.get(str(weather_code))
-
-    if description:
-        if "|" in description:
-            description = description.split("|")
-            description = description[0] if is_day == 1 else description[1]
+    if location:
+        if is_debug:
+            print(location.raw)
+        
+        return location.address
     else:
-        description = "Unknown"
-    
-    return description
-
-def get_cloud_cover_description(response_text):
-    '''
-    Get the cloud cover description from the API response.
-    '''
-    data_object = json.loads(response_text)
-
-    return f"{data_object['current']['cloud_cover']}% cloud cover"
-
-def get_cardinal_direction(azimuth):
-    if azimuth < 0 or azimuth >= 360:
-        raise ValueError("Azimuth must be in the range [0, 360) degrees.")
-    
-    directions = [
-        "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
-        "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW", "N"
-    ]
-    
-    index = round(azimuth / 22.5) % 16
- 
-    return directions[index]
-
-def get_wind_description(response_text):
-    '''
-    Get the wind and wind gust speed.
-    '''
-    data_object = json.loads(response_text)
-
-    wind = round(data_object['current']['wind_speed_10m'], 0)
-    wind = f"{wind:.2f}".rstrip('0').rstrip('.')
-
-    wind_gust = round(data_object['current']['wind_gusts_10m'], 0)
-    wind_gust = f"{wind_gust:.2f}".rstrip('0').rstrip('.')
-
-    wind_direction = get_cardinal_direction(data_object['current']['wind_direction_10m'])
-
-    wind_description = f"Wind: {wind} mph ({wind_direction}), gusting to {wind_gust} mph"
-
-    return wind_description
-
-def get_precipitation_probability(response_text):
-    '''
-    Get precipitation likelihood and return formatted description
-    '''
-    data_object = json.loads(response_text)
-
-    precipitation_probability = data_object['current']['precipitation_probability']
-
-    return f"Precipitation probability is {precipitation_probability}%"
-
-def get_formatted_low_temperature(response_text):
-    '''
-    Get the daily low temperature.
-    '''
-    data_object = json.loads(response_text)
-
-    temperature = round(data_object['daily']['temperature_2m_min'][0], 0)
-    formatted_temperature = f"{temperature:.2f}".rstrip('0').rstrip('.')
-
-    return f"min: {formatted_temperature}{degree_sign}"
-
-def get_formatted_high_temperature(response_text):
-    '''
-    Get the daily high temperature.
-    '''
-    data_object = json.loads(response_text)
-
-    temperature = round(data_object['daily']['temperature_2m_max'][0], 0)
-    formatted_temperature = f"{temperature:.2f}".rstrip('0').rstrip('.')
-
-    return f"max: {formatted_temperature}{degree_sign}"
-
-def get_sunrise(response_text):
-    '''
-    Get the time of today's sunrise.
-    '''
-    data_object = json.loads(response_text)
-
-    datetime_string = data_object['daily']['sunrise'][0]
-    dt = datetime.fromisoformat(datetime_string)
-
-    time_12_hour_format = dt.strftime("%I:%M %p")
-
-    return time_12_hour_format
-
-def get_sunset(response_text):
-    '''
-    Get the time of today's sunset.
-    '''
-    data_object = json.loads(response_text)
-
-    datetime_string = data_object['daily']['sunset'][0]
-    dt = datetime.fromisoformat(datetime_string)
-
-    time_12_hour_format = dt.strftime("%I:%M %p")
-
-    return time_12_hour_format
+        return "Unknown Location"
 
 
 def main():
@@ -276,15 +267,17 @@ def main():
         if is_debug:
             print (json.dumps(response.json(), indent=4))
 
-        print(f"{location_name} @ {get_current_time(response.text)}")
-        print(f"  {get_temperature_description(response.text)}")
-        print(f"  {get_humidity_and_dewpoint(response.text)}")
-        print(f"  {get_wso_description(response.text)}, {get_cloud_cover_description(response.text)}")
-        print(f"  {get_wind_description(response.text)}")
-        print(f"  {get_precipitation_probability(response.text)}")
+        om_mgr = OpenMeteoManager(response.text)
+
+        print(f"{location_name} @ {om_mgr.get_current_time()}")
+        print(f"  {om_mgr.get_temperature_description()}")
+        print(f"  {om_mgr.get_wso_description()}, {om_mgr.get_cloud_cover_description()}")
+        print(f"  {om_mgr.get_humidity_and_dewpoint()}")
+        print(f"  {om_mgr.get_wind_description()}")
+        print(f"  {om_mgr.get_precipitation_probability()}")
         print("  ----")
-        print(f"  {get_formatted_low_temperature(response.text)} / {get_formatted_high_temperature(response.text)}")
-        print(f"  sunrise: {get_sunrise(response.text)} / sunset: {get_sunset(response.text)}")
+        print(f"  {om_mgr.get_formatted_low_temperature()} / {om_mgr.get_formatted_high_temperature()}")
+        print(f"  sunrise: {om_mgr.get_sunrise()} / sunset: {om_mgr.get_sunset()}")
     else:
         print("Failed to retrieve weather data.")
         print(f"Status code: {response.status_code}")
