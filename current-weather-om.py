@@ -191,12 +191,9 @@ class OpenMeteoHelpers:
         location = geolocator.reverse(f"{latitude}, {longitude}")
 
         if location:
-            if is_debug:
-                print(location.raw)
-            
-            return location.address
+            return f"{location.raw['address']['county']}, {location.raw['address']['postcode']}"
         else:
-            return "Unknown Location"
+            return "Unknown location"
 
     @staticmethod
     def get_cardinal_direction(azimuth):
