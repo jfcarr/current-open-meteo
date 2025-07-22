@@ -65,7 +65,7 @@ class OpenMeteoManager:
         is_day = self.data_object['current']['is_day']
 
         weather_code = self.data_object['current']['weather_code']
-        description = OpenMeteoData.wmo_weather_codes.get(str(weather_code))
+        description = OpenMeteoData.wmo_weather_codes().get(str(weather_code))
 
         if description:
             if "|" in description:
@@ -147,37 +147,39 @@ class OpenMeteoManager:
         return time_12_hour_format
 
 class OpenMeteoData:
-    # https://gist.github.com/stellasphere/9490c195ed2b53c707087c8c2db4ec0c
-    wmo_weather_codes = {
-        "0": "Sunny|Clear",
-        "1": "Mainly Sunny|Mainly Clear",
-        "2": "Partly Cloudy",
-        "3": "Cloudy",
-        "45": "Foggy",
-        "48": "Rime Fog",
-        "51": "Light Drizzle",
-        "53": "Drizzle",
-        "55": "Heavy Drizzle",
-        "56": "Light Freezing Drizzle",
-        "57": "Freezing Drizzle",
-        "61": "Light Rain",
-        "63": "Rain",
-        "65": "Heavy Rain",
-        "66": "Light Freezing Rain",
-        "67": "Freezing Rain",
-        "71": "Light Snow",
-        "73": "Snow",
-        "75": "Heavy Snow",
-        "77": "Snow Grains",
-        "80": "Light Showers",
-        "81": "Showers",
-        "82": "Heavy Showers",
-        "85": "Light Snow Showers",
-        "86": "Snow Showers",
-        "95": "Thunderstorm",
-        "96": "Light Thunderstorms with Hail",
-        "99": "Thunderstorm with Hail"
-    }
+    @classmethod
+    def wmo_weather_codes(cls) -> dict:
+        # https://gist.github.com/stellasphere/9490c195ed2b53c707087c8c2db4ec0c
+        return {
+            "0": "Sunny|Clear",
+            "1": "Mainly Sunny|Mainly Clear",
+            "2": "Partly Cloudy",
+            "3": "Cloudy",
+            "45": "Foggy",
+            "48": "Rime Fog",
+            "51": "Light Drizzle",
+            "53": "Drizzle",
+            "55": "Heavy Drizzle",
+            "56": "Light Freezing Drizzle",
+            "57": "Freezing Drizzle",
+            "61": "Light Rain",
+            "63": "Rain",
+            "65": "Heavy Rain",
+            "66": "Light Freezing Rain",
+            "67": "Freezing Rain",
+            "71": "Light Snow",
+            "73": "Snow",
+            "75": "Heavy Snow",
+            "77": "Snow Grains",
+            "80": "Light Showers",
+            "81": "Showers",
+            "82": "Heavy Showers",
+            "85": "Light Snow Showers",
+            "86": "Snow Showers",
+            "95": "Thunderstorm",
+            "96": "Light Thunderstorms with Hail",
+            "99": "Thunderstorm with Hail"
+        }
 
 class OpenMeteoHelpers:
     @staticmethod
