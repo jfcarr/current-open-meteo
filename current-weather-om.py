@@ -253,9 +253,13 @@ def main():
         ]
     )
 
+    location_name = "Unknown location"
     try:
         location_name = OpenMeteoHelpers.find_location(args.latitude, args.longitude)
-        
+    except:
+        pass
+
+    try:
         response = requests.get(
             "https://api.open-meteo.com/v1/forecast?" + 
             f"latitude={args.latitude}&longitude={args.longitude}&" + 
@@ -285,7 +289,8 @@ def main():
             print("Failed to retrieve weather data.")
             print(f"Status code: {response.status_code}")
     except Exception as ex:
-        print(f"An error occurred: {ex}")
+        print("An error occurred:")
+        print(f"{ex}")
 
 if __name__ == "__main__":
     main()
