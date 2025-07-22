@@ -183,6 +183,22 @@ class OpenMeteoData:
 
 class OpenMeteoHelpers:
     @staticmethod
+    def find_location(latitude, longitude):
+        '''
+        Use the GeoPy geolocator to get location information based on latitude and longitude.
+        '''
+        geolocator = Nominatim(user_agent="openMeteoCli")
+        location = geolocator.reverse(f"{latitude}, {longitude}")
+
+        if location:
+            if is_debug:
+                print(location.raw)
+            
+            return location.address
+        else:
+            return "Unknown Location"
+
+    @staticmethod
     def get_cardinal_direction(azimuth):
         '''
         Give an azimuth value in degrees, return a cardinal direction, e.g., "NE".
@@ -198,22 +214,6 @@ class OpenMeteoHelpers:
         index = round(azimuth / 22.5) % 16
     
         return directions[index]
-
-def find_location(latitude, longitude):
-    '''
-    Use the GeoPy geolocator to get location information based on latitude and longitude.
-    '''
-    geolocator = Nominatim(user_agent="openMeteoCli")
-    location = geolocator.reverse(f"{latitude}, {longitude}")
-
-    if location:
-        if is_debug:
-            print(location.raw)
-        
-        return location.address
-    else:
-        return "Unknown Location"
-
 
 def main():
     parser = argparse.ArgumentParser(description='A simple argument parser example.')
@@ -254,7 +254,7 @@ def main():
     )
 
     try:
-        location_name = find_location(args.latitude, args.longitude)
+        location_name = OpenMeteoHelpers.find_location(args.latitude, args.longitude)
         
         response = requests.get(
             "https://api.open-meteo.com/v1/forecast?" + 
