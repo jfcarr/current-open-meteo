@@ -30,7 +30,7 @@ class OpenMeteoManager:
         datetime_string = self.data_object['current']['time']
         dt = datetime.fromisoformat(datetime_string)
 
-        time_12_hour_format = dt.strftime("%I:%M %p")
+        time_12_hour_format = dt.strftime("%I:%M %p").lstrip('0')
 
         return time_12_hour_format
 
@@ -131,7 +131,7 @@ class OpenMeteoManager:
         datetime_string = self.data_object['daily']['sunrise'][0]
         dt = datetime.fromisoformat(datetime_string)
 
-        time_12_hour_format = dt.strftime("%I:%M %p")
+        time_12_hour_format = dt.strftime("%I:%M %p").lstrip('0')
 
         return time_12_hour_format
 
@@ -142,7 +142,7 @@ class OpenMeteoManager:
         datetime_string = self.data_object['daily']['sunset'][0]
         dt = datetime.fromisoformat(datetime_string)
 
-        time_12_hour_format = dt.strftime("%I:%M %p")
+        time_12_hour_format = dt.strftime("%I:%M %p").lstrip('0')
 
         return time_12_hour_format
 
