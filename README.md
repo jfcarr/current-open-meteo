@@ -7,11 +7,17 @@ Simple display of current weather conditions using Open Meteo.
 Example output:
 
 ```txt
-Gratis Road, Preble County, Ohio, 45311, United States @ 08:30 PM
-  77° (feels like 79°)
-  Cloudy, 100% cloud cover
-  Wind: 10 mph, gusting to 21 mph
+Preble County, 45311 @ 9:00 PM
+  82° (feels like 89°)
+  Partly Cloudy, 54% cloud cover
+  Relative humidity is 68%, dew point is 71°
+  Wind: 5 mph (SSW), gusting to 10 mph
+  Precipitation probability is 3%
   ----
-  min: 66° / max: 83°
-  sunrise: 06:26 AM / sunset: 09:02 PM
+  min: 70° / max: 92°
+  sunrise: 6:31 AM / sunset: 8:58 PM
+  ----
+  Fri: 93°/75°, Showers (10% precip)
+  Sat: 90°/73°, Heavy Drizzle (26% precip)
+  Sun: 85°/72°, Thunderstorm (27% precip)
 ```
