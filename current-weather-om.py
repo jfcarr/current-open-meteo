@@ -147,19 +147,22 @@ class OpenMeteoManager:
         return time_12_hour_format
     
     def get_forecast(self, day_number):
-        for key, value in self.data_object.items():
-            if key == 'daily':
-                date_object = datetime.strptime(value['time'][day_number], "%Y-%m-%d")
-                day_of_week = date_object.strftime("%a")
+        daily_data = self.data_object.get('daily')
 
-                high_temperature = round(value['temperature_2m_max'][day_number], 0)
-                formatted_high_temperature = f"{high_temperature:.2f}".rstrip('0').rstrip('.')
-                low_temperature = round(value['temperature_2m_min'][day_number], 0)
-                formatted_low_temperature = f"{low_temperature:.2f}".rstrip('0').rstrip('.')
-                forecast_description = OpenMeteoData.wmo_weather_codes().get(str(value['weather_code'][day_number]))
-                precip = f"{value['precipitation_probability_mean'][day_number]}% precip"
+        date_object = datetime.strptime(daily_data['time'][day_number], "%Y-%m-%d")
+        day_of_week = date_object.strftime("%a")
 
-                return f"{day_of_week}: {formatted_high_temperature}{degree_sign}/{formatted_low_temperature}{degree_sign}, {forecast_description} ({precip})"
+        high_temperature = round(daily_data['temperature_2m_max'][day_number], 0)
+        formatted_high_temperature = f"{high_temperature:.2f}".rstrip('0').rstrip('.')
+
+        low_temperature = round(daily_data['temperature_2m_min'][day_number], 0)
+        formatted_low_temperature = f"{low_temperature:.2f}".rstrip('0').rstrip('.')
+
+        forecast_description = OpenMeteoData.wmo_weather_codes().get(str(daily_data['weather_code'][day_number]))
+
+        precip = f"{daily_data['precipitation_probability_mean'][day_number]}% precip"
+
+        return f"{day_of_week}: {formatted_high_temperature}{degree_sign}/{formatted_low_temperature}{degree_sign}, {forecast_description} ({precip})"
 
 class OpenMeteoData:
     @classmethod
