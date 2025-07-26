@@ -162,7 +162,7 @@ class OpenMeteoManager:
 
         precip = f"{daily_data['precipitation_probability_mean'][day_number]}% precip"
 
-        return f"{day_of_week}: {formatted_high_temperature}{degree_sign}/{formatted_low_temperature}{degree_sign}, {forecast_description} ({precip})"
+        return f"{day_of_week}: {formatted_high_temperature}{degree_sign}/{formatted_low_temperature}{degree_sign} {forecast_description} ({precip})"
 
 class OpenMeteoData:
     @classmethod
