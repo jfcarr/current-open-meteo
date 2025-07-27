@@ -160,7 +160,7 @@ class OpenMeteoManager:
 
         forecast_description = OpenMeteoData.wmo_weather_codes().get(str(daily_data['weather_code'][day_number]))
 
-        precip = f"{daily_data['precipitation_probability_mean'][day_number]}% precip"
+        precip = f"{daily_data['precipitation_probability_min'][day_number]}%-{daily_data['precipitation_probability_max'][day_number]}% precip"
 
         return f"{day_of_week}: {formatted_high_temperature}{degree_sign}/{formatted_low_temperature}{degree_sign} {forecast_description} ({precip})"
 
@@ -267,7 +267,9 @@ def main():
             "sunset",
             "rain_sum",
             "snowfall_sum",
+            "precipitation_probability_min",
             "precipitation_probability_mean",
+            "precipitation_probability_max",
             "weather_code"
         ]
     )
@@ -302,7 +304,7 @@ def main():
             print(f"  {om_mgr.get_wind_description()}")
             print(f"  {om_mgr.get_precipitation_probability()}")
             print("  ----")
-            print(f"  sunrise: {om_mgr.get_sunrise()} / sunset: {om_mgr.get_sunset()}")
+            print(f"  sunrise: {om_mgr.get_sunrise()} | sunset: {om_mgr.get_sunset()}")
             print("  ----")
             print(f"  {om_mgr.get_forecast(0)}")
             print(f"  {om_mgr.get_forecast(1)}")
