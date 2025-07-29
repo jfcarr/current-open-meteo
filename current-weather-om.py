@@ -162,6 +162,11 @@ class OpenMeteoManager:
         formatted_low_temperature = f"{low_temperature:.2f}".rstrip('0').rstrip('.')
 
         forecast_description = OpenMeteoData.wmo_weather_codes().get(str(daily_data['weather_code'][day_number]))
+        if forecast_description:
+            if "|" in forecast_description:
+                forecast_description = forecast_description.split("|")[0]
+        else:
+            forecast_description = "Unknown"
 
         precip = f"{daily_data['precipitation_probability_min'][day_number]}%-{daily_data['precipitation_probability_max'][day_number]}% precip"
 
