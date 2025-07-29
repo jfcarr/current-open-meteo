@@ -86,17 +86,20 @@ class OpenMeteoManager:
         '''
         Get the wind and wind gust speed.
         '''
-        wind = round(self.data_object['current']['wind_speed_10m'], 0)
-        wind = f"{wind:.2f}".rstrip('0').rstrip('.')
+        try:
+            wind = round(self.data_object['current']['wind_speed_10m'], 0)
+            wind = f"{wind:.2f}".rstrip('0').rstrip('.')
 
-        wind_gust = round(self.data_object['current']['wind_gusts_10m'], 0)
-        wind_gust = f"{wind_gust:.2f}".rstrip('0').rstrip('.')
+            wind_gust = round(self.data_object['current']['wind_gusts_10m'], 0)
+            wind_gust = f"{wind_gust:.2f}".rstrip('0').rstrip('.')
 
-        wind_direction = OpenMeteoHelpers.get_cardinal_direction(self.data_object['current']['wind_direction_10m'])
+            wind_direction = OpenMeteoHelpers.get_cardinal_direction(self.data_object['current']['wind_direction_10m'])
 
-        wind_description = f"Wind: {wind} mph ({wind_direction}), gusting to {wind_gust} mph"
-
-        return wind_description
+            wind_description = f"Wind: {wind} mph ({wind_direction}), gusting to {wind_gust} mph"
+    
+            return wind_description
+        except:
+            return "No wind information"
 
     def get_precipitation_probability(self):
         '''
@@ -218,7 +221,7 @@ class OpenMeteoHelpers:
         '''
         Give an azimuth value in degrees, return a cardinal direction, e.g., "NE".
         '''
-        if azimuth < 0 or azimuth >= 360:
+        if azimuth < 0 or azimuth > 360:
             raise ValueError("Azimuth must be in the range [0, 360) degrees.")
         
         directions = [
